@@ -1,5 +1,5 @@
 // surpass warning that goes from macro expansion in syn::{parenthesized!, bracketed!, braced!}
-#![allow(clippy::eval_order_dependence)]
+#![allow(clippy::mixed_read_write_in_expression)]
 
 use proc_macro::TokenStream;
 use proc_macro2::Span;
