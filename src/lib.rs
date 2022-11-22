@@ -113,6 +113,7 @@ enum BuilderType {
     Vec(Type),
     Other(Type),
 }
+
 impl BuilderType {
     fn generic(&self) -> Type {
         match self {
@@ -157,24 +158,6 @@ struct BuilderField {
     ty: BuilderType,
 }
 
-struct AttributeInner {
-    path: syn::Path,
-    tokens: proc_macro2::TokenStream,
-}
-
-impl From<Attribute> for AttributeInner {
-    fn from(Attribute { path, tokens, .. }: Attribute) -> Self {
-        AttributeInner { path, tokens }
-    }
-}
-
-impl ToTokens for AttributeInner {
-    fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
-        self.path.to_tokens(tokens);
-        self.tokens.to_tokens(tokens);
-    }
-}
-
 impl Parse for BuilderField {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         Ok(BuilderField {
@@ -184,7 +167,10 @@ impl Parse for BuilderField {
                 .find(|attr| attr.path.is_ident("builder"))
                 .map(|attr| {
                     syn::parse(attr.to_token_stream().into()).map_err(|_| {
-                        Error::new_spanned(AttributeInner::from(attr), PARSING_ATTRIBUTE_ERROR)
+                        let mut tokens = proc_macro2::TokenStream::new();
+                        attr.path.to_tokens(&mut tokens);
+                        attr.tokens.to_tokens(&mut tokens);
+                        Error::new_spanned(tokens, PARSING_ATTRIBUTE_ERROR)
                     })
                 })
                 .transpose()?,
